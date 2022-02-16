@@ -38,7 +38,7 @@ def max_vitamin_c(data):
 
 
 def main():
-    table = np.genfromtxt("./data/ABBREV.csv", delimiter=";", dtype=None, names=True, encoding="utf8")
+    table = np.genfromtxt("./data/ABBREV.csv", delimiter=";", dtype=None, names=True, encoding="utf-8")
 
     max_kcal_array = max_energy_kcal(table)
     max_sugar_array = max_sugar(table)
