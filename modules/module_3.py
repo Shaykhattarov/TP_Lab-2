@@ -1,70 +1,121 @@
 import numpy as np
 import os
+import json
 
 
 def get_files_size(dir_path):
-    files_size = []
+    data = dict()
     try:
-        for dirpath, dirnames, filenames in os.walk(dir_path):
-            for file in filenames:
-                file_dir = dir_path + "/" + file
-                files_size.append(file + " - " + str(os.stat(file_dir).st_size / 1024) + " Кбайт")
-        if not files_size:
-            raise Exception("В данной директории нет файлов или её не существует!")
-    except NotImplementedError as err:
-        return err
-    except OSError as err:
-        return err
-    except WindowsError as err:
-        return err
+        filenames = os.listdir(dir_path)
+        for filename in filenames:
+            filesize = str(os.stat(f'{dir_path}/{filename}').st_size / 1024)
+            data[filename] = f'{filesize} Kbyte'
     except Exception as err:
-        return err
+        print(err)
+        return dict(result=None, error=err.errno)
+    except FileNotFoundError as err:
+        print(err)
+        return dict(result=None, error=err.errno)
+    except OSError as err:
+        print(err)
+        return dict(result=None, error=err.errno)
     else:
-        return files_size
-
-
-def insertion(data):
-    for i in range(len(data)):
-        j = i - 1
-        key = data[i]
-        while data[j] > key and j >= 0:
-            data[j + 1] = data[j]
-            j -= 1
-        data[j + 1] = key
-    return data
+        return dict(result=data, error=None)
 
 
 def sort_csv_by_name(data):
-    names_arr = np.array([])
+    sorted_names = np.argsort(data[:, 1], kind='quicksort')
+    data = data[sorted_names]
+    return data
+
+
+def sort_csv_by_int(data):
+    sorted_old = np.argsort(data[:, 3], kind='quicksort')
+    data = data[sorted_old]
+    return data
+
+
+def filter_csv_by_sep(data):
+    print("Введите число больше которого должен быть возраст:", end=" ")
+    border = float(input())
+    arr = []
     for row in data:
-        names_arr = np.append(names_arr, row[1])
-    sort_names = np.sort(names_arr)
-    print(sort_names)
+        if float(row[3]) >= border:
+            arr.append(row)
+    result = np.array(arr)
+    return result
 
 
-def get_CSV_files(dir_path):
-    sort_result_name = np.array([])
-    sort_result_int = np.array([])
-    sort_result_req = np.array([])
+def get_CSV_files(csv_filename):
+    print("На поиск файла в системе требуется время. "
+          "Для успешного поиска файла нужно указать правильную примерную стартовую директорию.")
+    print("Укажите стартовую директорию:", end=" ")
+    start_dir = input()
     try:
-        for dirpath, dirnames, filenames in os.walk(dir_path):
-            for file in filenames:
-                if file == "PET_DATA.csv":
-                    file_dir = dir_path + "/" + file
-                    csv_data = np.genfromtxt(file_dir, delimiter=";", dtype=None, names=True, encoding=None)
-                    sort_csv_by_name(csv_data)
-                    # sort_csv_by_int(csv_data)
-                    # sort_csv_by_req(csv_data, kwarg)
-    except NotImplementedError as err:
-        return err
+        filepath = find_filepath(start_dir=start_dir, filename=csv_filename)
+        if filepath == "":
+            raise FileNotFoundError
+    except FileNotFoundError as err:
+        print(err)
+        return dict(result=None, error=err.errno)
+
+    try:
+        table = np.genfromtxt(filepath, delimiter=";", dtype='>U8', skip_header=1, encoding=None)
+        sort_name = sort_csv_by_name(table).tolist()
+        sort_int = sort_csv_by_int(table).tolist()
+        sort_req = filter_csv_by_sep(table).tolist()
+        data = dict(namesort=sort_name, oldsort=sort_int, paramsort=sort_req)
+        return dict(result=data, error=None)
+    except NameError as err:
+        print(err)
+        return dict(result=None, error=err.errno)
+    except OSError as err:
+        print(err)
+        return dict(result=None, error=err.errno)
+
+
+def find_filepath(start_dir, filename):
+    filepath = ""
+    for root, dir, filenames in os.walk(start_dir):
+        for file in filenames:
+            if file == filename:
+                print(filepath)
+                filepath = str(os.path.join(root, file))
+                break
+    return filepath
 
 
 def main():
+    result = dict()
+
+    print("1.Введите путь к директории:", end=" ")
     dir_path = input()
-    get_CSV_files(dir_path)
-    res_arr = get_files_size(dir_path)
-    if type(res_arr) != Exception:
-        for arr in res_arr:
-            print(arr)
+    data = get_files_size(dir_path)
+    if data['error'] is None:
+        result["Task 1"] = data['result']
     else:
-        print(res_arr)
+        result["Task 1"] = 'Error'
+
+    print("2.Введите имя csv-файла:", end=" ")
+    filename = input()
+    data = get_CSV_files(filename)
+    if data["error"] is None:
+        result['Task 2'] = data['result']
+    else:
+        result["Task 2"] = 'Error'
+
+    with open('data/result.json', "w", encoding='utf-8') as file:
+        try:
+            file.write(json.dumps(result, ensure_ascii=False))
+        except TypeError as err:
+            print(err)
+
+    try:
+        os.replace('data/result.json', 'result.json')
+        os.remove(f'data/{filename}')
+    except FileNotFoundError as err:
+        exit(err)
+    except OSError as err:
+        exit(err)
+    except Exception as err:
+        exit(err)
