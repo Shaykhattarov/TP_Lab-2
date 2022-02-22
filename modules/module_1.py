@@ -40,13 +40,8 @@ def max_vitamin_c(data):
 
 
 def main():
-<<<<<<< Updated upstream
-    table = np.genfromtxt("./data/ABBREV.csv", delimiter=";", dtype=None, names=True, encoding="utf8")
-
-=======
     table = np.genfromtxt("./data/ABBREV.csv", delimiter=";", dtype=None, names=True, encoding="utf-8")
-    print(table['Energ_Kcal'])
->>>>>>> Stashed changes
+
     max_kcal_array = max_energy_kcal(table)
     max_sugar_array = max_sugar(table)
     max_protein_array = max_protein(table)

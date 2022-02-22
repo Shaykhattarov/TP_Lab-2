@@ -1,9 +1,5 @@
 import numpy as np
 
-<<<<<<< Updated upstream
-def main():
-    pass
-=======
 
 def generation(line):
     line = np.insert(np.append(line, np.array([0, 0])), 0, np.array([0, 0]))
@@ -37,4 +33,3 @@ def main():
     for i in range(10):
         line = generation(line)
         print(line)
->>>>>>> Stashed changes
