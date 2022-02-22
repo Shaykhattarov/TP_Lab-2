@@ -30,6 +30,8 @@ def max_protein(data):
 
 
 def max_vitamin_c(data):
+    print(data[:, 1])
+
     max_el = data[0]
     for row in data:
         if row[20] > max_el[20]:
